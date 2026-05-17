@@ -116,6 +116,31 @@ export default function App() {
     setToastPayload(null);
   }, []);
 
+  const autoNotifyIfNeeded = useCallback(async (result: ScamAnalysisResult) => {
+    if (mode === 'elderly' && result.riskScore >= 66 && userSession?.familyEmail) {
+      setIsNotifyingFamily(true);
+      try {
+        const payload = {
+          to: userSession.familyEmail,
+          userFullName: userSession.fullName,
+          riskScore: result.riskScore,
+          riskLevel: result.riskLevel,
+          scamType: result.scamType,
+          reasons: result.reasons,
+          analyzedUrl: result.extractedUrls?.[0],
+          elderlyExplanation: result.elderlyExplanation,
+        };
+        console.log("Auto notifying family:", payload);
+        await notifyFamily(payload as any);
+        setFamilyAlertManualOpen(true);
+      } catch (error) {
+        console.log("Auto notify family failed:", error);
+      } finally {
+        setIsNotifyingFamily(false);
+      }
+    }
+  }, [mode, userSession]);
+
   const resetModeSelection = useCallback(() => {
     setSelectedImage(null);
     setAnalysis(null);
@@ -193,6 +218,7 @@ export default function App() {
       }
       setShowQuotaBusy(false);
       setAnalysis(result);
+      void autoNotifyIfNeeded(result);
       if (mode === 'normal') {
         setToastPayload(getAnalysisToastPayload(result));
       }
@@ -205,7 +231,7 @@ export default function App() {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [mode]);
+  }, [mode, autoNotifyIfNeeded]);
 
   const handleQrPayload = useCallback(
     (raw: string) => {
@@ -290,6 +316,7 @@ export default function App() {
       }
       setShowQuotaBusy(false);
       setAnalysis(result);
+      void autoNotifyIfNeeded(result);
       if (mode === 'normal') {
         setToastPayload(getAnalysisToastPayload(result));
       }
@@ -572,22 +599,22 @@ export default function App() {
                   <TouchableOpacity
                     style={[
                       styles.familyNotifyBtn,
-                      (isAnalyzing || isNotifyingFamily) && styles.familyNotifyBtnDisabled,
+                      (isAnalyzing || isNotifyingFamily || familyAlertManualOpen) && styles.familyNotifyBtnDisabled,
                     ]}
                     onPress={handleNotifyFamily}
-                    disabled={isAnalyzing || isNotifyingFamily}
+                    disabled={isAnalyzing || isNotifyingFamily || familyAlertManualOpen}
                     activeOpacity={0.88}
                     accessibilityRole="button"
                     accessibilityLabel="Aileye bildir"
                   >
                     <Ionicons
-                      name="people-outline"
+                      name={familyAlertManualOpen ? "checkmark-circle-outline" : "people-outline"}
                       size={18}
                       color="#a7f3d0"
                       style={styles.familyNotifyIcon}
                     />
                     <Text style={styles.familyNotifyBtnText}>
-                      {isNotifyingFamily ? 'Gönderiliyor...' : 'Aileye Bildir'}
+                      {isNotifyingFamily ? 'Gönderiliyor...' : familyAlertManualOpen ? 'Bildirim Gönderildi' : 'Aileye Bildir'}
                     </Text>
                   </TouchableOpacity>
                   {showFamilyAlertCard ? (
@@ -604,22 +631,22 @@ export default function App() {
                   <TouchableOpacity
                     style={[
                       styles.familyNotifyBtn,
-                      (isAnalyzing || isNotifyingFamily) && styles.familyNotifyBtnDisabled,
+                      (isAnalyzing || isNotifyingFamily || familyAlertManualOpen) && styles.familyNotifyBtnDisabled,
                     ]}
                     onPress={handleNotifyFamily}
-                    disabled={isAnalyzing || isNotifyingFamily}
+                    disabled={isAnalyzing || isNotifyingFamily || familyAlertManualOpen}
                     activeOpacity={0.88}
                     accessibilityRole="button"
                     accessibilityLabel="Aileye bildir"
                   >
                     <Ionicons
-                      name="people-outline"
+                      name={familyAlertManualOpen ? "checkmark-circle-outline" : "people-outline"}
                       size={18}
                       color="#a7f3d0"
                       style={styles.familyNotifyIcon}
                     />
                     <Text style={styles.familyNotifyBtnText}>
-                      {isNotifyingFamily ? 'Gönderiliyor...' : 'Aileye Bildir'}
+                      {isNotifyingFamily ? 'Gönderiliyor...' : familyAlertManualOpen ? 'Bildirim Gönderildi' : 'Aileye Bildir'}
                     </Text>
                   </TouchableOpacity>
                   {showFamilyAlertCard ? (

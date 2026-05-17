@@ -259,6 +259,6 @@ app.post(
   },
 )
 
-app.listen(port, () => {
-  console.log(`AI Scam Shield backend listening on http://localhost:${port}`)
+app.listen(port, '0.0.0.0', () => {
+  console.log(`AI Scam Shield backend listening on http://0.0.0.0:${port}`)
 })
