@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,6 +25,7 @@ type AuthMode = 'login' | 'register';
 export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
   const [mode, setMode] = useState<AuthMode>('login');
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const [loginPhone, setLoginPhone] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -36,24 +38,36 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
   const clearError = useCallback(() => setError(null), []);
 
   const handleLogin = useCallback(async () => {
+    console.log("Login button pressed");
     clearError();
     if (loginPhone.trim() === '' || loginPassword.trim() === '') {
       setError('Lütfen tüm alanları doldurun.');
       return;
     }
-    const stored = await getUserSession();
-    // isLoggedIn false olsa da kayıtlı telefon + şifre doğruysa girişe izin ver
-    if (
-      stored == null ||
-      stored.phoneNumber.trim() !== loginPhone.trim() ||
-      stored.password !== loginPassword
-    ) {
-      setError('Telefon numarası veya şifre hatalı.');
-      return;
+    
+    setLoading(true);
+    try {
+      const stored = await getUserSession();
+      // isLoggedIn false olsa da kayıtlı telefon + şifre doğruysa girişe izin ver
+      if (
+        stored == null ||
+        stored.phoneNumber.trim() !== loginPhone.trim() ||
+        stored.password !== loginPassword
+      ) {
+        setError('Telefon numarası veya şifre hatalı.');
+        setLoading(false);
+        return;
+      }
+      const updated: UserSession = { ...stored, isLoggedIn: true };
+      await saveUserSession(updated);
+      console.log("Login success");
+      onAuthenticated(updated);
+    } catch (err) {
+      console.log("Auth error:", err);
+      Alert.alert("Hata", "İşlem sırasında bir hata oluştu.");
+    } finally {
+      setLoading(false);
     }
-    const updated: UserSession = { ...stored, isLoggedIn: true };
-    await saveUserSession(updated);
-    onAuthenticated(updated);
   }, [
     clearError,
     loginPassword,
@@ -62,6 +76,7 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
   ]);
 
   const handleRegister = useCallback(async () => {
+    console.log("Register button pressed");
     clearError();
     const fullName = regFullName.trim();
     const phoneNumber = regPhone.trim();
@@ -82,15 +97,24 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
       return;
     }
 
-    const session: UserSession = {
-      fullName,
-      phoneNumber,
-      password,
-      familyEmail,
-      isLoggedIn: true,
-    };
-    await saveUserSession(session);
-    onAuthenticated(session);
+    setLoading(true);
+    try {
+      const session: UserSession = {
+        fullName,
+        phoneNumber,
+        password,
+        familyEmail,
+        isLoggedIn: true,
+      };
+      await saveUserSession(session);
+      console.log("Register success");
+      onAuthenticated(session);
+    } catch (err) {
+      console.log("Auth error:", err);
+      Alert.alert("Hata", "İşlem sırasında bir hata oluştu.");
+    } finally {
+      setLoading(false);
+    }
   }, [
     clearError,
     onAuthenticated,
@@ -168,27 +192,35 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
                   accessibilityLabel="Şifre"
                 />
 
-                <TouchableOpacity
-                  style={styles.primaryButton}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    pressed && { opacity: 0.88 },
+                    loading && { opacity: 0.5 }
+                  ]}
                   onPress={handleLogin}
-                  activeOpacity={0.88}
+                  disabled={loading}
                   accessibilityRole="button"
                   accessibilityLabel="Giriş Yap"
                 >
                   <Text style={styles.primaryButtonText}>Giriş Yap</Text>
-                </TouchableOpacity>
+                </Pressable>
 
-                <TouchableOpacity
-                  style={styles.linkButton}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.linkButton,
+                    pressed && { opacity: 0.7 },
+                    loading && { opacity: 0.5 }
+                  ]}
                   onPress={switchToRegister}
-                  activeOpacity={0.7}
+                  disabled={loading}
                   accessibilityRole="button"
                   accessibilityLabel="Kayıt ol"
                 >
                   <Text style={styles.linkButtonText}>
                     Hesabın yok mu? Kayıt ol
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               </>
             ) : (
               <>
@@ -254,27 +286,35 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
                   accessibilityLabel="Yakın e-posta"
                 />
 
-                <TouchableOpacity
-                  style={styles.primaryButton}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.primaryButton,
+                    pressed && { opacity: 0.88 },
+                    loading && { opacity: 0.5 }
+                  ]}
                   onPress={handleRegister}
-                  activeOpacity={0.88}
+                  disabled={loading}
                   accessibilityRole="button"
                   accessibilityLabel="Kayıt Ol"
                 >
                   <Text style={styles.primaryButtonText}>Kayıt Ol</Text>
-                </TouchableOpacity>
+                </Pressable>
 
-                <TouchableOpacity
-                  style={styles.linkButton}
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.linkButton,
+                    pressed && { opacity: 0.7 },
+                    loading && { opacity: 0.5 }
+                  ]}
                   onPress={switchToLogin}
-                  activeOpacity={0.7}
+                  disabled={loading}
                   accessibilityRole="button"
                   accessibilityLabel="Giriş yap"
                 >
                   <Text style={styles.linkButtonText}>
                     Zaten hesabın var mı? Giriş yap
                   </Text>
-                </TouchableOpacity>
+                </Pressable>
               </>
             )}
           </View>
