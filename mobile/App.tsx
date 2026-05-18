@@ -596,59 +596,34 @@ export default function App() {
               {!showQuotaBusy && analysis && mode === 'normal' ? (
                 <>
                   <AnalysisResultCard result={analysis} />
-                  <TouchableOpacity
-                    style={[
-                      styles.familyNotifyBtn,
-                      (isAnalyzing || isNotifyingFamily || familyAlertManualOpen) && styles.familyNotifyBtnDisabled,
-                    ]}
-                    onPress={handleNotifyFamily}
-                    disabled={isAnalyzing || isNotifyingFamily || familyAlertManualOpen}
-                    activeOpacity={0.88}
-                    accessibilityRole="button"
-                    accessibilityLabel="Aileye bildir"
-                  >
-                    <Ionicons
-                      name={familyAlertManualOpen ? "checkmark-circle-outline" : "people-outline"}
-                      size={18}
-                      color="#a7f3d0"
-                      style={styles.familyNotifyIcon}
-                    />
-                    <Text style={styles.familyNotifyBtnText}>
-                      {isNotifyingFamily ? 'Gönderiliyor...' : familyAlertManualOpen ? 'Bildirim Gönderildi' : 'Aileye Bildir'}
-                    </Text>
-                  </TouchableOpacity>
-                  {showFamilyAlertCard ? (
-                    <FamilyAlertCard
-                      tone={familyCardTone}
-                      riskLevelLabel={analysis.riskLevel}
-                    />
-                  ) : null}
                 </>
               ) : null}
               {!showQuotaBusy && analysis && mode === 'elderly' ? (
                 <>
                   <ElderlyModeResultCard result={analysis} />
-                  <TouchableOpacity
-                    style={[
-                      styles.familyNotifyBtn,
-                      (isAnalyzing || isNotifyingFamily || familyAlertManualOpen) && styles.familyNotifyBtnDisabled,
-                    ]}
-                    onPress={handleNotifyFamily}
-                    disabled={isAnalyzing || isNotifyingFamily || familyAlertManualOpen}
-                    activeOpacity={0.88}
-                    accessibilityRole="button"
-                    accessibilityLabel="Aileye bildir"
-                  >
-                    <Ionicons
-                      name={familyAlertManualOpen ? "checkmark-circle-outline" : "people-outline"}
-                      size={18}
-                      color="#a7f3d0"
-                      style={styles.familyNotifyIcon}
-                    />
-                    <Text style={styles.familyNotifyBtnText}>
-                      {isNotifyingFamily ? 'Gönderiliyor...' : familyAlertManualOpen ? 'Bildirim Gönderildi' : 'Aileye Bildir'}
-                    </Text>
-                  </TouchableOpacity>
+                  {analysis.riskScore < 66 ? (
+                    <TouchableOpacity
+                      style={[
+                        styles.familyNotifyBtn,
+                        (isAnalyzing || isNotifyingFamily || familyAlertManualOpen) && styles.familyNotifyBtnDisabled,
+                      ]}
+                      onPress={handleNotifyFamily}
+                      disabled={isAnalyzing || isNotifyingFamily || familyAlertManualOpen}
+                      activeOpacity={0.88}
+                      accessibilityRole="button"
+                      accessibilityLabel="Aileye bildir"
+                    >
+                      <Ionicons
+                        name={familyAlertManualOpen ? "checkmark-circle-outline" : "people-outline"}
+                        size={18}
+                        color="#a7f3d0"
+                        style={styles.familyNotifyIcon}
+                      />
+                      <Text style={styles.familyNotifyBtnText}>
+                        {isNotifyingFamily ? 'Gönderiliyor...' : familyAlertManualOpen ? 'Bildirim Gönderildi' : 'Aileye Bildir'}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
                   {showFamilyAlertCard ? (
                     <FamilyAlertCard
                       tone={familyCardTone}
